@@ -5,32 +5,22 @@ import React, {
   useRef,
   useState
 } from "react";
-import { v1 as uuid } from "uuid";
-import { Todo } from "../type";
+import { useSelector, useDispatch } from "react-redux";
+import {
+  createTodoActionCreator,
+  editTodoActionCreator,
+  toggleTodoActionCreator,
+  deleteTodoActionCreator,
+  selectTodoActionCreator
+} from "../redux-og";
+import { Todo, State } from "../type";
 import "./App.css";
 
-const todos: Todo[] = [
-  {
-    id: uuid(),
-    desc: "Learn React",
-    isComplete: true
-  },
-  {
-    id: uuid(),
-    desc: "Learn Redux",
-    isComplete: true
-  },
-  {
-    id: uuid(),
-    desc: "Learn Redux-ToolKit",
-    isComplete: false
-  }
-];
-
-const selectedTodoId = todos[1].id;
-const editedCount = 0;
-
 const App = function() {
+  const dispacth = useDispatch();
+  const todos = useSelector((state: State) => state.todos);
+  const selectedTodoId = useSelector((state: State) => state.selectedTodo);
+  const editedCount = useSelector((state: State) => state.counter);
   const [newTodoInput, setNewTodoInput] = useState<string>("");
   const [editTodoInput, setEditTodoInput] = useState<string>("");
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
@@ -49,13 +39,17 @@ const App = function() {
 
   const handleCreateNewTodo = (e: FormEvent<HTMLFormElement>): void => {
     e.preventDefault();
+    if (!newTodoInput.length) return;
+    dispacth(createTodoActionCreator({ desc: newTodoInput }));
+    setNewTodoInput("");
   };
 
-  const handleSelectTodo = (todoId: string) => (): void => {};
+  const handleSelectTodo = (todoId: string) => (): void => {
+    dispacth(selectTodoActionCreator({ id: todoId }));
+  };
 
   const handleEdit = (): void => {
     if (!selectedTodo) return;
-
     setEditTodoInput(selectedTodo.desc);
     setIsEditMode(true);
   };
@@ -106,9 +100,8 @@ const App = function() {
           <h2>My Todos:</h2>
           {todos.map((todo, i) => (
             <li
-              className={`${todo.isComplete ? "done" : ""} ${
-                todo.id === selectedTodoId ? "active" : ""
-              }`}
+              className={`${todo.isComplete ? "done" : ""} 
+              ${todo.id === selectedTodoId ? "active" : ""}`}
               key={todo.id}
               onClick={handleSelectTodo(todo.id)}
             >
@@ -123,9 +116,8 @@ const App = function() {
           ) : !isEditMode ? (
             <>
               <span
-                className={`todo-desc ${
-                  selectedTodo?.isComplete ? "done" : ""
-                }`}
+                className={`todo-desc
+                  ${selectedTodo?.isComplete ? "done" : ""}`}
               >
                 {selectedTodo.desc}
               </span>
